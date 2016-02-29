@@ -86,7 +86,16 @@ gulp.task('build:required', (cb) => {
   });
 });
 
+gulp.task('build:demo', (cb) => {
+  var _src = './build/jsforce.js';
+  var _dst = './demo/public/js/jsforce.js';
+  var readable = fs.createReadStream( _src );
+  var writable = fs.createWriteStream( _dst );   
+  readable.pipe( writable );
+  cb();
+});
+
 gulp.task('build:scripts', gulp.parallel(...scriptTasks.map(({ name }) => name)));
 
-gulp.task('build', gulp.series('build:required', 'build:scripts'));
+gulp.task('build', gulp.series('build:required', 'build:scripts', 'build:demo'));
 gulp.task('default', gulp.series('build'));

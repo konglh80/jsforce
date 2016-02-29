@@ -1,0 +1,97 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>JSForce Moblor Transfer</title>
+  <script src="js/jsforce.js"></script>
+  <script src="js/jquery.min.js"></script>
+  <script>
+    var username = 'konglh80@gmail.com';
+    var password = '1qaz2wsx';
+    var conn = new jsforce.Connection({
+      oauth2: {
+        loginUrl: 'https://login.salesforce.com',
+        clientId: '3MVG9CVKiXR7Ri5qt4vFy.dtpB25BJvqpxaI29g5AOceoWLzIC7CqnjHnfCnsOl2wPT5qf10LnsjbWtBs6Og.',
+        clientSecret: '3011399720851753414',
+        redirectUri: 'https://login.salesforce.com/services/oauth2/success'
+      },
+      agent: function ( params, callback ) {
+        console.log( params );
+        $.post( '/transfer-agent', { params : JSON.stringify( params ) }, function ( res ) {
+          var result = {
+            body: res
+          }
+
+          callback( null, result );
+        } );
+
+        return this;
+      }
+    });
+
+    var showMessage = function ( message ) {
+      $( '#message' ).html( '<span style="color: green;">' + message + '</span>' );
+    };
+
+    var showError = function ( err ) {
+      $( '#message' ).html( '<span style="color: red;">Error: ' + JSON.stringify( err ) + '</span>' );
+    };
+
+    var login = function () {
+      conn.login( username, password, function ( err, userInfo ) {
+        if (err) {
+          return showError(  err );
+        }
+
+        var output = []
+
+        output.push('<br>Access token: ' + conn.accessToken + '<br>')
+        output.push('<br>Instance Url: ' + conn.instanceUrl + '<br>')
+        output.push('<br>User Inof: ' + JSON.stringify(userInfo, null, 2) + '<br>')
+
+        showMessage( output.join( '' ) );
+
+        console.log( conn );
+        
+      });
+    };
+
+    var fetch = function () {
+      conn.tooling.sobject('ApexClass').describe(function (err, meta) {
+        if (err) {
+          return showError(  err );
+        }
+
+        showMessage( JSON.stringify(meta) );
+      });
+    };
+
+    var create = function () {
+      var apexBody = [
+        'public class TestApex' + new Date().getTime() + ' {',
+        '  public string sayHello() {',
+        '    return \'Hello\';',
+        '  }',
+        '}'
+      ].join('\n')
+
+      conn.tooling.sobject('ApexClass').create({
+        body: apexBody
+      }, function (err, res) {
+        if (err) {
+          return showError(  err );
+        }
+
+        showMessage( JSON.stringify(res) );
+      });
+    };
+
+  </script>
+</head>
+<body>
+  <button onclick="login()">Login</button>
+  <button onclick="fetch()">Fetch</button>
+  <button onclick="create()">Create</button>
+  <br><br><br><br>
+  <div id="message" style="width: 100%;"></div>
+</body>
+</html>
